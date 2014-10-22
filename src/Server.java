@@ -101,9 +101,7 @@ class clientThread extends Thread {
 	        if (line.startsWith("/quit")) {
 	          break;
 	        }
-
 	      }*/
-
 	      /*
 	       * Clean up. Set the current thread variable to null so that a new clientThread
 	       * could be accepted by the server.

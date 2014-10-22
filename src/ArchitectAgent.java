@@ -36,7 +36,7 @@ public class ArchitectAgent extends Agent {
 		final JTextField AgentNumber = new JTextField("Enter agents number");
 		final JTextField CorrdinateTime = new JTextField("Corrdinate agents attack");
 		JButton CreateAgents = new JButton("Create Agent(s)");
-	    JButton AttackButton = new JButton("Attack");
+	    JButton AttackButton = new JButton("Attack Neo");
 	    JButton StopButton = new JButton("Kill All");
 	    JButton ExitButton = new JButton("Exit");
 	    JLabel HostLabel = new JLabel("Enter Host Address");
@@ -68,7 +68,6 @@ public class ArchitectAgent extends Agent {
 		    monitoringPanel.add(MessageMonitoring);
 		    monitoringFrame.add(monitoringPanel);
 		   
-		    
 		    // Turn on automatically adding gaps between components
 		    layout.setAutoCreateGaps(true);
 
@@ -158,12 +157,6 @@ public class ArchitectAgent extends Agent {
 						}
 					};
 					printMsg.start();
-					
-					try {
-					    Thread.sleep(4000);
-					} catch(InterruptedException ex) {
-					    Thread.currentThread().interrupt();
-					}
 					System.exit(1);
 				}
 			});
@@ -172,15 +165,33 @@ public class ArchitectAgent extends Agent {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					// TODO Auto-generated method stub
+					
+					//Catch all errors
+					if ( HostAddress.getText().equals(""))
+					{
+						MessageMonitoring.append("Error : No inpout for Host Address please try againg");
+						return;
+					}
+					
+					if ( AgentNumber.getText().equals(""))
+					{
+						MessageMonitoring.append("Error : No inpout for Agents Number please try againg");
+						return;
+					}
+					
+					
 					Thread Create = new Thread(){
 		        		public void run(){
-		        			prepareTheArmy(Integer.parseInt(AgentNumber.getText()), Integer.parseInt(CorrdinateTime.getText())); 
+		        			//prepareTheArmy(Integer.parseInt(AgentNumber.getText()), Integer.parseInt(CorrdinateTime.getText())); 
 		        			//When calling the the function to prepare army Store the values of host address and port
-		        			RemoteHost.add(HostAddress.getText()+":"+PortAddress.getText());
-		        			MessageMonitoring.append(AgentNumber.getText()+" Agents created");
+		        			SendMessageCreateAgents PA = new SendMessageCreateAgents();
+		        			addBehaviour(PA);
+		        			//Keep all Agent Information Host address where agents are located and agent name
+		        			RemoteHost.add(HostAddress.getText()+":AC");			
 		        		}
 		        	};
 		        	Create.start();
+		        	MessageMonitoring.append(AgentNumber.getText()+" Agents created\n");
 				}
 			});
 		    
@@ -223,50 +234,12 @@ public class ArchitectAgent extends Agent {
 		   
 		  } 
 	 
-	 //function which will start the attack
-	 static void prepareTheArmy(int numberOfAgents, int interval)
-	 {		 
-		 try {
-		      // Get hold of JADE runtime
-		      Runtime rt = Runtime.instance();
-		      // Exit the JVM when there are no more containers around
-		      //rt.setCloseVM(true);
-
-		      // set now the default Profile to start a container "Agent_Platform_Container"
-		      	ProfileImpl pContainer1 = new ProfileImpl(null, 1099, null);
-		      	System.out.println("Launching the agent container ..."+pContainer1);
-			    pContainer1.setParameter(pContainer1.CONTAINER_NAME,"Agent_Platform_Container");
-		      	AgentContainer cont1 =  rt.createAgentContainer(pContainer1);
-		      	System.out.println("Launching the agent container after ..."+pContainer1);
-
-		      	CoordinateAttack startUpLatch = new CoordinateAttack();
-		        //Create some delay here to give time for the container to be create before creating the agents
-		      	Instances = new AgentController[numberOfAgents];
-		      	for ( int i=0; i<numberOfAgents; i++ )
-		      		//Add in the array the instances
-		      		Instances[i] = cont1.createNewAgent("AS"+i, AgentSmith.class.getName(), new Object[] { startUpLatch });
-
-		        try {
-			startUpLatch.waitOn();
-		      }
-		      catch(InterruptedException ie) {
-			ie.printStackTrace();
-		      }
-
-		    }
-		    catch(Exception e) {
-		      e.printStackTrace();
-		    }
-	 }
-	 
-	 //functino which luanch the attck
+	 //function which launch the attack
 	 public static void LaunchAttack(int numberOfAgents) throws StaleProxyException
 	 {
 			for ( int i=0; i<numberOfAgents; i++ )
 					Instances[i].start();
-	 }
-	 
-	 
+	 }	 
 
  public static class CoordinateAttack { 
 	 private boolean value = false;
@@ -322,15 +295,25 @@ public class ArchitectAgent extends Agent {
 		}	 
 	 }
  
- //Class where we keep hosts information so the Architect knows where to connect
- public class HostsInformation{
-	 private String hostAddress = new String();
-	 private int postNumber;	 
-	 public HostsInformation(String a, int b) {
-		// TODO Auto-generated constructor stub
-		 this.hostAddress = a;
-		 this.postNumber = b;
-	}
- }
+ //Sends single message to the Agent Creator to start creating the agents
+ public class SendMessageCreateAgents extends OneShotBehaviour{
+
+		@Override
+		public void action() {
+			// TODO Auto-generated method stub
+				ACLMessage msg = new ACLMessage(ACLMessage.REQUEST); 
+				//Agent name be default is the AC = Agent Creator
+				AID address = new AID();
+				address.setName("AC@AgentsCreator");
+	            address.addAddresses(HostAddress.getText().toString());
+	            msg.addReceiver(address);
+	            msg.setLanguage("English");
+	            msg.setContent("Create:"+AgentNumber.getText()); //This string symbolize the agents death
+	            send(msg);	
+	            System.out.println("****I Sent Message to::> AC *****"+"\n"+
+                        "The Content of My Message is::>"+ msg.getContent());
+		}	 
+	 }
+ 
 }
 

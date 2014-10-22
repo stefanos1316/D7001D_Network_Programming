@@ -28,16 +28,33 @@ import jade.domain.FIPAException;
 
 public class AgentSmith extends Agent {
 	long t0 = System.currentTimeMillis();
-	private String IPAddress = "localhost";
+	private String IPAddress = "54.171.167.6";
 	private int port = 2222;
 	private Socket clientSocket = null;
 	private int interval = 1000;
     public Behaviour loop;
     
+    
 @Override
 public void setup() {
-	//addBehaviour( new Looper( this, interval ) );
+
+	  /** Registration with the DF */
+    DFAgentDescription dfd = new DFAgentDescription();
+    ServiceDescription sd = new ServiceDescription();
+    sd.setType("AgentSmith");
+    sd.setName(getName());
+    sd.setOwnership("AgentSmithMachines");
+    sd.addOntologies("AttackerAgent");
+    dfd.setName(getAID());
+    dfd.addServices(sd);
+    try {
+    DFService.register(this,dfd);
+    } catch (FIPAException e) {
+    System.err.println(getLocalName()+" registration with DF unsucceeded. Reason: "+e.getMessage());
+    doDelete();
+    }
 	
+    /*Ticker function implementation*/
 	loop = new TickerBehaviour( this, 1000 )
 	{
                     protected void onTick() {
@@ -49,12 +66,9 @@ public void setup() {
                		      System.err.println("Couldn't get I/O for the connection to the host "
                		          + port);
                		    }
-                    //System.out.println( System.currentTimeMillis()-t0 +
-				//": " + myAgent.getLocalName());
                     }
 	};
-
-	addBehaviour( loop );
+	 addBehaviour( loop );
 	 ReceiveMessage rm = new ReceiveMessage();
      addBehaviour(rm);
 }
@@ -78,10 +92,15 @@ public class ReceiveMessage extends CyclicBehaviour {
             if( Message_Content.equals("die") )
             	doDelete();
             
-            //Inform Server that we are done!!!
+            //Inform Server that we are done!!! // after fibonacci is done agent smith is will die
         }
 
     }
 }
+
+//Settters to attack Server
+
+
+
 }
 
