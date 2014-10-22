@@ -8,6 +8,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 
 
+
 import jade.core.*;
 import jade.core.behaviours.*;
 import jade.domain.*;
@@ -28,7 +29,7 @@ import jade.domain.FIPAException;
 
 public class AgentSmith extends Agent {
 	long t0 = System.currentTimeMillis();
-	private String IPAddress = "54.171.167.6";
+	private String IPAddress = "54.171.156.140";
 	private int port = 2222;
 	private Socket clientSocket = null;
 	private int interval = 1000;
@@ -89,8 +90,15 @@ public class ReceiveMessage extends CyclicBehaviour {
             Message_Content = msg.getContent();
             SenderName = msg.getSender().getLocalName();
             
-            if( Message_Content.equals("die") )
+            if ( Message_Content.equals("die") )
             	doDelete();
+            
+            //If attack message received configure host and port address
+            if ( Message_Content.contains("Attack"))
+            {
+            	String[] split = Message_Content.split(":");
+            	setIpAndPort(split[1], Integer.parseInt(split[2]),Integer.parseInt(split[3]));
+            }
             
             //Inform Server that we are done!!! // after fibonacci is done agent smith is will die
         }
@@ -99,7 +107,12 @@ public class ReceiveMessage extends CyclicBehaviour {
 }
 
 //Settters to attack Server
-
+public void setIpAndPort(String ip,int port, int interval)
+{
+	this.IPAddress = ip;
+	this.port = port;
+	this.interval = interval;
+}
 
 
 }

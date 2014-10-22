@@ -36,6 +36,7 @@ public class AgentsCreator extends Agent {
 	//Array where all Agents are stored
 	private static AgentController[] Instances;
 	private static int numberOfAgents = 0;
+	public CondVar startUpLatch = new CondVar();
 	
 	protected void setup(){
 		
@@ -59,7 +60,7 @@ public class AgentsCreator extends Agent {
 	    addBehaviour(rm);
 		
 	}
-	
+
 	public class ReceiveMessage extends CyclicBehaviour{
 		
 		 // Variable to Hold the content of the received Message
@@ -79,7 +80,17 @@ public class AgentsCreator extends Agent {
 	            ////////////////////////////////////////////////////////////////////////////////////////////////////
 	            //Receive a number
 	            if ( Message_Content.equals("die") )
-	            	doDelete(); //kill all agents
+	            {
+	            	for (int i=0; i<Instances.length; ++i)
+	            	{
+	            		try {
+							Instances[i].kill();
+						} catch (StaleProxyException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+	            	}
+	            }
 	            
 	            ////////////////////////////////////////////////////////////////////////////////////////////////////
 	            //if message contains create and number create number of agents
@@ -95,47 +106,52 @@ public class AgentsCreator extends Agent {
 	              	AgentContainer cont1 = rt.createAgentContainer(pContainer1);
 	              	System.out.println("Launching the agent container after ..."+pContainer1);
 
-	                CondVar startUpLatch = new CondVar();
+	              
 	                numberOfAgents = Integer.parseInt(spliter[1]);
 	        
 	            	for ( int i=0; i<Integer.parseInt(spliter[1]); ++i )
 	            	{
 	            		try {
 							Instances[i] = cont1.createNewAgent("AS"+i, AgentSmith.class.getName(), new Object[] { startUpLatch });
+							//Instances[i].start();
 						} catch (StaleProxyException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
 	            	}
 	            	
-	            	  try {
+	            	 /* try {
 	          			startUpLatch.waitOn();
+	          			
 	          		      }
 	          		      catch(InterruptedException ie) {
 	          			ie.printStackTrace();
 	          		      }   
 	          		    catch(Exception e) {
 	          		      e.printStackTrace();
-	          		    }
-	            	
+	          		    }  */         	
 	            }
 	            ////////////////////////////////////////////////////////////////////////////////////////////////////
 	            //if message attack received then start attacking server NEO
 	            if ( Message_Content.contains("Attack") ) //String container Attack:HostAddress:Port
 	            {
-	            	String[] spliter = Message_Content.split(":");
-	            	/*for ( int i=0; i<numberOfAgents; ++i )
+	            	System.out.println("I received msg to attack");
+	            	//String[] spliter = Message_Content.split(":");
+	            	for ( int i=0; i<Instances.length; ++i )
 	            	{
-	            		//Assign the host and port address and after that launch them
-	            		Instances[i].
-	            	}*/
+	            		//Before starting the attack 
+	            		//startUpLatch.signal();
+	            		//Start Attacking the Server
+	            		try {
+							Instances[i].start();
+						} catch (StaleProxyException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+	            	}
 	            }
-	            
-	            //Inform Server that we are done!!! // after fibonacci is done agent smith is will die
 	        }
-
-	    }
-		
+	    }	
 	}
 	
 	 public static class CondVar {
@@ -146,13 +162,27 @@ public class AgentsCreator extends Agent {
 			wait();
 		      }
 		    }
-
 		    synchronized void signal() {
 		      value = true;
 		      notifyAll();
 		    }
 
 		  } // End of CondVar class
+	 
+	 public class SendMessageAgentParam extends OneShotBehaviour{
+		 private String host = new String();
+		 private int port = 0;
+		 
+		 public SendMessageAgentParam(String host,int port){
+		 		this.host = host;
+		 		this.port = port;
+		 	}
 
-
+			@Override
+			public void action() {
+				
+				
+			}
+		 
+	 }
 }

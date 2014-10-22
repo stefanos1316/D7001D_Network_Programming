@@ -3,14 +3,22 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
 
+import javax.swing.text.StyleConstants;
 import javax.swing.*;
 import javax.swing.GroupLayout.Alignment;
+import javax.swing.text.BadLocationException;
 import javax.swing.text.Caret;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleContext;
+import javax.swing.text.StyledDocument;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.SimpleAttributeSet;
 
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
 import org.omg.CORBA.portable.OutputStream;
+import org.w3c.dom.Document;
 
 import jade.core.AID;
 import jade.core.Runtime;
@@ -43,11 +51,15 @@ public class ArchitectAgent extends Agent {
 	    JLabel PortLabel = new JLabel("Enter Port Number");
 	    JLabel AgentNoLabel = new JLabel("Enter Number of Agent(s)");
 	    JLabel TimeIntervalLabel = new JLabel("Enter Time Interval");
-	    JTextArea MessageMonitoring = new JTextArea(20,40);
-
+	    JTextPane MessageMonitoring = new JTextPane();
+	    StyledDocument doc = MessageMonitoring.getStyledDocument();
+	    StyleContext sc = StyleContext.getDefaultStyleContext();
+	    AttributeSet aset = sc.addAttribute(SimpleAttributeSet.EMPTY,StyleConstants.Foreground, Color.red);
+	   // textEditorDoc.setCharacterAttributes(offset, length, aset, true);
+	    
 	public void setup() {
 	
-			final List RemoteHost = new List();
+			final ArrayList RemoteHost = new ArrayList();
 		
 	        ///////////////////////////////////////////////////////////////////////////////////////////////////////
 	        ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -117,17 +129,37 @@ public class ArchitectAgent extends Agent {
 		    {
 		        public void actionPerformed(ActionEvent e)
 		        {
-		            //Create agents to attack
-		        	//prepareTheArmy(Integer.parseInt(AgentNumber.getText()), Integer.parseInt(CorrdinateTime.getText()));
+		            //Check for  the parameters before sending
+		        	//Catch all errors
+					if ( HostAddress.getText().equals(""))
+					{
+						try {
+							doc.insertString(doc.getLength(), "Error : No inpout for Host Address please try againg\n", aset);
+						} catch (BadLocationException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}
+						//MessageMonitoring.append("Error : No inpout for Host Address please try againg\n");
+						return;
+					}
+					
+					//Catch all errors
+					if ( PortAddress.getText().equals(""))
+					{
+						try {
+							doc.insertString(doc.getLength(), "Error : No inpout for Port Address please try againg\n", aset);
+						} catch (BadLocationException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}
+						//MessageMonitoring.append("Error : No inpout for Host Address please try againg\n");
+						return;
+					}
+		        	
 		        	Thread Attack = new Thread(){
 		        		public void run(){
-		        			try {
-								LaunchAttack(Integer.parseInt(AgentNumber.getText()));
-							} catch (NumberFormatException
-									| StaleProxyException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							}
+		        				SendMessage PA = new SendMessage("Attack",RemoteHost);
+			        			addBehaviour(PA);						
 		        		}
 		        	};
 		        	Attack.start();
@@ -140,9 +172,15 @@ public class ArchitectAgent extends Agent {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					// TODO Auto-generated method stub
-					SendMessage LU = new SendMessage();
+					SendMessage LU = new SendMessage("Die",RemoteHost);
 			        addBehaviour(LU);
-			        MessageMonitoring.append("Killing all agents...please wait...\n");
+			        try {
+						doc.insertString(doc.getLength(), "Killing all agents...please wait...\n", aset);
+					} catch (BadLocationException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+			       // MessageMonitoring.appendTo("Killing all agents...please wait...\n");
 				}
 			});
 		    
@@ -153,7 +191,13 @@ public class ArchitectAgent extends Agent {
 					// TODO Auto-generated method stub
 					Thread printMsg = new Thread(){
 						public void run(){
-							MessageMonitoring.append("Exiting from the system...\n");
+							//MessageMonitoring.append("Exiting from the system...\n");
+							try {
+								doc.insertString(doc.getLength(), "Exiting from the system...\n", aset);
+							} catch (BadLocationException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
 						}
 					};
 					printMsg.start();
@@ -169,13 +213,25 @@ public class ArchitectAgent extends Agent {
 					//Catch all errors
 					if ( HostAddress.getText().equals(""))
 					{
-						MessageMonitoring.append("Error : No inpout for Host Address please try againg");
+						try {
+							doc.insertString(doc.getLength(), "Error : No inpout for Host Address please try againg\n", aset);
+						} catch (BadLocationException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}
+						//MessageMonitoring.append("Error : No inpout for Host Address please try againg\n");
 						return;
 					}
 					
 					if ( AgentNumber.getText().equals(""))
 					{
-						MessageMonitoring.append("Error : No inpout for Agents Number please try againg");
+						try {
+							doc.insertString(doc.getLength(), "Error : No inpout for Agents Number please try againg\n", aset);
+						} catch (BadLocationException e2) {
+							// TODO Auto-generated catch block
+							e2.printStackTrace();
+						}
+						//MessageMonitoring.append("Error : No inpout for Agents Number please try againg\n");
 						return;
 					}
 					
@@ -184,14 +240,20 @@ public class ArchitectAgent extends Agent {
 		        		public void run(){
 		        			//prepareTheArmy(Integer.parseInt(AgentNumber.getText()), Integer.parseInt(CorrdinateTime.getText())); 
 		        			//When calling the the function to prepare army Store the values of host address and port
-		        			SendMessageCreateAgents PA = new SendMessageCreateAgents();
+		        			SendMessage PA = new SendMessage("Create",RemoteHost);
 		        			addBehaviour(PA);
 		        			//Keep all Agent Information Host address where agents are located and agent name
-		        			RemoteHost.add(HostAddress.getText()+":AC");			
+		        			RemoteHost.add(HostAddress.getText());			
 		        		}
 		        	};
 		        	Create.start();
-		        	MessageMonitoring.append(AgentNumber.getText()+" Agents created\n");
+		        	try {
+						doc.insertString(doc.getLength(), AgentNumber.getText()+" Agents created\n", null);
+					} catch (BadLocationException e2) {
+						// TODO Auto-generated catch block
+						e2.printStackTrace();
+					}
+		        	//MessageMonitoring.append(AgentNumber.getText()+" Agents created\n");
 				}
 			});
 		    
@@ -233,13 +295,6 @@ public class ArchitectAgent extends Agent {
 		    monitoringFrame.setVisible(true);
 		   
 		  } 
-	 
-	 //function which launch the attack
-	 public static void LaunchAttack(int numberOfAgents) throws StaleProxyException
-	 {
-			for ( int i=0; i<numberOfAgents; i++ )
-					Instances[i].start();
-	 }	 
 
  public static class CoordinateAttack { 
 	 private boolean value = false;
@@ -265,38 +320,18 @@ public class ArchitectAgent extends Agent {
 		}	 
 }
  
- public class SendMessage extends OneShotBehaviour{
 
-		@Override
-		public void action() {
-			// TODO Auto-generated method stub
-				
-			for ( int i=0; i<Integer.parseInt(AgentNumber.getText()); ++i )	
-			{
-				//For loop with all Agents
-				String nameAgent = new String();
-				try {
-					nameAgent = Instances[i].getName();
-				} catch (StaleProxyException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				ACLMessage msg = new ACLMessage(ACLMessage.REQUEST); 
-				AID address = new AID(nameAgent,AID.ISGUID);
-				System.out.println(nameAgent);
-	            //AID address = new AID(AgentName.getText().toString(),AID.ISGUID);
-	            address.addAddresses("localhost");
-	            msg.addReceiver(address);
-	            msg.setSender(address);
-	            msg.setLanguage("English");
-	            msg.setContent("die"); //This string symbolize the agents death
-	            send(msg);
-			}
-		}	 
-	 }
  
  //Sends single message to the Agent Creator to start creating the agents
- public class SendMessageCreateAgents extends OneShotBehaviour{
+ public class SendMessage extends OneShotBehaviour{
+	 
+	 	private String command = new String();
+	 	private ArrayList list = new ArrayList();
+	 
+	 	public SendMessage(String command,ArrayList list){
+	 		this.command = command;
+	 		this.list = list;
+	 	}
 
 		@Override
 		public void action() {
@@ -308,12 +343,52 @@ public class ArchitectAgent extends Agent {
 	            address.addAddresses(HostAddress.getText().toString());
 	            msg.addReceiver(address);
 	            msg.setLanguage("English");
-	            msg.setContent("Create:"+AgentNumber.getText()); //This string symbolize the agents death
-	            send(msg);	
-	            System.out.println("****I Sent Message to::> AC *****"+"\n"+
-                        "The Content of My Message is::>"+ msg.getContent());
-		}	 
+	            
+	            if ( command.contains("Create") )
+	            {
+	            	msg.setContent("Create:"+AgentNumber.getText()); //This string symbolize the agents death
+	            	send(msg);
+	            	 System.out.println("****I Sent Message to::> AC *****"+"\n"+
+	                         "The Content of My Message is::>"+ msg.getContent());
+	            }
+	            if ( command.contains("Attack"))
+	            {
+	            	//For Send creator we are sending to all agents creators single msg
+	            	for ( int i=0; i<list.size(); ++i )
+	            	{
+	            		
+	            		ACLMessage msgA = new ACLMessage(ACLMessage.REQUEST);
+	            		AID addressAttack = new AID();
+	    				addressAttack.setName("AC@AgentsCreator");
+	    	            addressAttack.addAddresses(list.get(i).toString());	
+	    	            msgA.addReceiver(addressAttack);
+	    	            msgA.setLanguage("English");
+	    	            msgA.setContent("Attack:"+HostAddress.getText()+":"+PortAddress.getText()+":"+CorrdinateTime.getText());
+	    	            send(msgA);
+	    	            System.out.println("****I Sent Message to::> AC *****"+"\n"+
+	                            "The Content of My Message is::>"+ msgA.getContent());
+	            	}
+	            }
+	            if ( command.equals("Die"))
+	            {
+	            	for ( int i=0; i<list.size(); ++i )
+	            	{
+	            		AID addressAttack = new AID();
+	    				addressAttack.setName("AC@AgentsCreator");
+	    	            addressAttack.addAddresses(list.get(i).toString());	  
+	    	            msg.addReceiver(addressAttack);
+	    	            msg.setContent("Die");
+	    	            send(msg);
+	    	            System.out.println("****I Sent Message to::> AC *****"+"\n"+
+	                            "The Content of My Message is::>"+ msg.getContent());
+	            	}
+	            }	   
+	            for (int k=0; k<list.size(); ++k)
+	    			System.out.println(list.get(k).toString());
+		}	
+		
+		
 	 }
- 
+	
 }
 
