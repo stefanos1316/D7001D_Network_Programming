@@ -11,8 +11,10 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
 import org.omg.CORBA.portable.OutputStream;
+import org.omg.CosNaming.IstringHelper;
 
 import jade.core.AID;
+import jade.core.ContainerID;
 import jade.core.Runtime;
 import jade.core.Profile;
 import jade.core.ProfileImpl;
@@ -22,11 +24,15 @@ import jade.wrapper.*;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.OneShotBehaviour;
+import jade.domain.AMSService;
 import jade.domain.DFService;
 import jade.domain.FIPAException;
+import jade.domain.FIPAAgentManagement.AMSAgentDescription;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
+import jade.domain.FIPAAgentManagement.SearchConstraints;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.JADEAgentManagement.KillAgent;
+import jade.domain.JADEAgentManagement.KillContainer;
 import jade.lang.acl.ACLMessage;
 
 
@@ -37,6 +43,11 @@ public class AgentsCreator extends Agent {
 	private static AgentController[] Instances;
 	private static int numberOfAgents = 0;
 	public CondVar startUpLatch = new CondVar();
+	public 	AgentContainer cont1;
+	public AgentContainer agent;
+	ProfileImpl pContainer1;
+	public String SenderNameAA = new String();
+	public int currentNumberOfAgents = 0;
 	
 	protected void setup(){
 		/** Registration with the DF */
@@ -75,6 +86,7 @@ public class AgentsCreator extends Agent {
 	            Message_Performative = msg.getPerformative(msg.getPerformative());
 	            Message_Content = msg.getContent();
 	            SenderName = msg.getSender().getLocalName();
+	            SenderNameAA = msg.getSender().getLocalName();
 	            
 	            ////////////////////////////////////////////////////////////////////////////////////////////////////
 	            //if message attack received then start attacking server NEO
@@ -96,18 +108,18 @@ public class AgentsCreator extends Agent {
 	            
 	            ////////////////////////////////////////////////////////////////////////////////////////////////////
 	            //Receive Die Message
-	            if ( Message_Content.equals("die") )
-	            {
-	            	//Kill all agents one - by - one
+	            if ( Message_Content.equals("Die") )
+	            {           	
 	            	for (int i=0; i<Instances.length; ++i)
 	            	{
-	            		try {
+						try {
+							System.out.println("dsad"+Instances[i].getName());	
 							Instances[i].kill();
 						} catch (StaleProxyException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
-						}
-	            	}
+						} 		            		
+	            	}	            	
 	            }
 	            
 	            ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -123,38 +135,33 @@ public class AgentsCreator extends Agent {
 	            	Runtime rt = Runtime.instance();
 	            	
 	            	//Create Profile Container for the agents
-	            	ProfileImpl pContainer1 = new ProfileImpl(null, 1099, null);
+	            	pContainer1 = new ProfileImpl(null, 1099, null);
 	              	System.out.println("Launching the agent container ..."+pContainer1);
 	              	//Name of Container where my Agents are creates
 	              	pContainer1.setParameter(Profile.CONTAINER_NAME,"SmallEvilAgents");
-	              	AgentContainer cont1 = rt.createAgentContainer(pContainer1);
+	              	cont1 = rt.createAgentContainer(pContainer1);
 	              	System.out.println("Launching the agent container after ..."+pContainer1);
 	                numberOfAgents = Integer.parseInt(spliter[1]);
+	                Object[] args = new String[spliter.length-2];
+	                System.out.println("Values are "+spliter[2]+" "+spliter[3]+" "+spliter[4]);
+	                args[0] = spliter[2];
+	                args[1] = spliter[3];
+	                args[2] = spliter[4];
+	                
+	               // System.exit(1);
 	        
 	            	for ( int i=0; i<numberOfAgents; ++i )
 	            	{
 	            		try {
 	            			//StartUpLatch is the var to make all the agents wait until they recv signal
-							Instances[i] = cont1.createNewAgent("AS"+i, AgentSmith.class.getName(), new Object[] { startUpLatch });
+							Instances[i] = cont1.createNewAgent("AS"+i, AgentSmith.class.getName(), args);
 							//Instances[i].start();
 						} catch (StaleProxyException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
 	            	}
-	            	
-	            	/* try {
-	          			startUpLatch.waitOn();
-	          			
-	          		      }
-	          		      catch(InterruptedException ie) {
-	          			ie.printStackTrace();
-	          		      }   
-	          		    catch(Exception e) {
-	          		      e.printStackTrace();
-	          		    }         	*/
-	            }
-	           
+	            }   
 	        }
 	    }	
 	}
@@ -173,5 +180,51 @@ public class AgentsCreator extends Agent {
 		    }
 
 		  } // End of CondVar class
+	 
+	 public class SendMessage extends OneShotBehaviour{
+		 
+		 private String receiver = new String();
+		 private String Message_Content = new String();
+		 
+		 public SendMessage(String content) {
+			// TODO Auto-generated constructor stub
+			 this.Message_Content = content;
+		}
+		 
+		 ACLMessage msg = new ACLMessage(ACLMessage.REQUEST); 
+			//Agent name be default is the AC = Agent Creator
+			AID address = new AID();
+			@Override
+			public void action() {
+				// TODO Auto-generated method stub
+				for ( int i=0; i<Instances.length; ++i)
+				{
+				 
+				 try {
+					address.setName(Instances[i].getName());
+				} catch (StaleProxyException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+		        // address.addAddresses(HostAddress.getText().toString());
+		         msg.addReceiver(address);
+		         msg.setLanguage("English");
+		         send(msg);
+		         try {
+		        	    Thread.sleep(2000);                 //1000 milliseconds is one second.
+		        	} catch(InterruptedException ex) {
+		        	    Thread.currentThread().interrupt();
+		        	}
+		         try {
+					Instances[i].start();
+				} catch (StaleProxyException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				}
+				
+			}
+			
+	 }
 	 
 }

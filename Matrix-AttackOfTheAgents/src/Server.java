@@ -100,9 +100,13 @@ class clientThread extends Thread {
 	      is = new DataInputStream(clientThreadSocket.getInputStream());
 	      os = new PrintStream(clientThreadSocket.getOutputStream());
 
-	      int k = fibonacci(45);
 	      
-	     /* System.out.println("Fibonacci Done!!!");
+	      int number = 200;
+	      int k=0;
+	      for ( int i=0; i<number; ++i)
+	      k = fibonacci(i);
+	      
+	     System.out.println("Fibonacci Done!!!");/*
 	      for (int i = 0; i < maxclientThreadsCount; i++) {
 	        if (threads[i] == this) {
 	          threads[i] = null;

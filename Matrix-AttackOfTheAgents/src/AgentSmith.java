@@ -8,6 +8,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 
 
+
 import jade.core.*;
 import jade.core.behaviours.*;
 import jade.domain.*;
@@ -52,9 +53,13 @@ public void setup() {
     System.err.println(getLocalName()+" registration with DF unsucceeded. Reason: "+e.getMessage());
     doDelete();
     }
+    
+    Object[] args = getArguments();
+    setIpAndPort(args[0].toString(), Integer.parseInt(args[1].toString()), Integer.parseInt(args[2].toString()));
+    
 	
     /*Ticker function implementation*/
-	loop = new TickerBehaviour( this, 1000 )
+	loop = new TickerBehaviour( this, this.interval )
 	{
                     protected void onTick() {
                     	 try {
@@ -88,13 +93,26 @@ public class ReceiveMessage extends CyclicBehaviour {
             Message_Content = msg.getContent();
             SenderName = msg.getSender().getLocalName();
             
-            if( Message_Content.equals("die") )
+            if( Message_Content.equals("Die") )
             	doDelete();
+            
+            if ( Message_Content.contains("Attack"))
+            {
+            	String[] splitter = Message_Content.split(":");
+            	setIpAndPort(splitter[1], Integer.parseInt(splitter[2]), Integer.parseInt(splitter[3]));
+            }
             
             //Inform Server that we are done!!! // after fibonacci is done agent smith is will die
         }
 
     }
+}
+
+public void setIpAndPort(String ip,int port, int interval)
+{
+	this.IPAddress = ip;
+	this.port = port;
+	this.interval = interval;
 }
 }
 

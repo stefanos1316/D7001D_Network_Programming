@@ -1,1 +1,1 @@
-( ap-description  :name "AgentsCreator" :ap-services (set ( ap-service  :name fipa.mts.mtp.http.std :type fipa.mts.mtp.http.std :addresses (sequence http://Stefanos-PC.mshome.net:18688/acc))))
+( ap-description  :name "AgentArchitect" :ap-services (set ( ap-service  :name fipa.mts.mtp.http.std :type fipa.mts.mtp.http.std :addresses (sequence http://130.240.153.182:17593/acc))))

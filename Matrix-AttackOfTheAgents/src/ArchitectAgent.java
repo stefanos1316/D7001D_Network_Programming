@@ -2,6 +2,11 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+import javax.swing.ImageIcon;
 import javax.swing.text.StyleConstants;
 import javax.swing.*;
 import javax.swing.GroupLayout.Alignment;
@@ -12,10 +17,13 @@ import javax.swing.text.StyleContext;
 import javax.swing.text.StyledDocument;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.SimpleAttributeSet;
+
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+
 import org.omg.CORBA.portable.OutputStream;
 import org.w3c.dom.Document;
+
 import jade.core.AID;
 import jade.core.Runtime;
 import jade.core.Profile;
@@ -39,6 +47,7 @@ public class ArchitectAgent extends Agent {
 		JLabel titleAgent = new JLabel("The Architect");
 		final JTextField AgentNumber = new JTextField("Enter agents number");
 		final JTextField CorrdinateTime = new JTextField("Corrdinate agents attack");
+		final JTextField ServerAddress = new JTextField("Server Address");
 		JButton CreateAgents = new JButton("Create Agent(s)");
 	    JButton AttackButton = new JButton("Attack Neo");
 	    JButton StopButton = new JButton("Kill All");
@@ -47,11 +56,42 @@ public class ArchitectAgent extends Agent {
 	    JLabel PortLabel = new JLabel("Enter Port Number");
 	    JLabel AgentNoLabel = new JLabel("Enter Number of Agent(s)");
 	    JLabel TimeIntervalLabel = new JLabel("Enter Time Interval");
+	    JLabel AttackServerLabel = new JLabel("Enter Server Address");
 	    JTextPane MessageMonitoring = new JTextPane();
 	    StyledDocument doc = MessageMonitoring.getStyledDocument();
 	    StyleContext sc = StyleContext.getDefaultStyleContext();
 	    AttributeSet aset = sc.addAttribute(SimpleAttributeSet.EMPTY,StyleConstants.Foreground, Color.red);
+	    ImagePanel panel_img = new ImagePanel(new ImageIcon("Architect.png").getImage());
+	    DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss dd/MM/yyyy ");
+	    Date date = new Date();
+	    //System.out.println(dateFormat.format(date)); 
 	   // textEditorDoc.setCharacterAttributes(offset, length, aset, true);
+	    
+	    class ImagePanel extends JPanel {
+
+	    	  private Image img;
+
+	    	  public ImagePanel(String img) {
+	    	    this(new ImageIcon(img).getImage());
+	    	  }
+
+	    	  public ImagePanel(Image img) {
+	    	    this.img = img;
+	    	    Dimension size = new Dimension(img.getWidth(null), img.getHeight(null));
+	    	    setPreferredSize(size);
+	    	    setMinimumSize(size);
+	    	    setMaximumSize(size);
+	    	    setSize(size);
+	    	    setLayout(null);
+	    	  }
+
+	    	  public void paintComponent(Graphics g) {
+	    		  super.paintComponent(g);
+	    		Color transparent = new Color(0, 0, 0, 0);
+	    		g.drawImage(img, 0, 0, img.getWidth(null), img.getHeight(null), null);
+	    	   
+	    	  }
+	    }
 	    
 	public void setup() {
 	
@@ -94,6 +134,8 @@ public class ArchitectAgent extends Agent {
 		    		.addComponent(CreateAgents)
 		    		.addComponent(AttackButton));
 		    leftToRight_V.addGroup(layout.createParallelGroup()
+		    		.addComponent(AttackServerLabel)
+		    		.addComponent(ServerAddress)
 		    		.addComponent(PortLabel)
 		    		.addComponent(PortAddress)
 		    		.addComponent(TimeIntervalLabel)
@@ -107,13 +149,17 @@ public class ArchitectAgent extends Agent {
 		    leftToRight_G.addGroup(layout.createParallelGroup(Alignment.BASELINE).
 		    		addComponent(titleAgent));
 		    leftToRight_G.addGroup(layout.createParallelGroup(Alignment.BASELINE).
-		    		addComponent(HostLabel) .addComponent(PortLabel));
+		    		addComponent(AttackServerLabel));
 		    leftToRight_G.addGroup(layout.createParallelGroup(Alignment.BASELINE).
-		    		addComponent(HostAddress) .addComponent(PortAddress));
+		    		addComponent(ServerAddress));
 		    leftToRight_G.addGroup(layout.createParallelGroup(Alignment.BASELINE).
-		    		addComponent(AgentNoLabel) .addComponent(TimeIntervalLabel));
+		    		addComponent(PortLabel) .addComponent(HostLabel));
 		    leftToRight_G.addGroup(layout.createParallelGroup(Alignment.BASELINE).
-		    		addComponent(AgentNumber) .addComponent(CorrdinateTime));
+		    		addComponent(PortAddress) .addComponent(HostAddress));
+		    leftToRight_G.addGroup(layout.createParallelGroup(Alignment.BASELINE).
+		    		addComponent(TimeIntervalLabel) .addComponent(AgentNoLabel));
+		    leftToRight_G.addGroup(layout.createParallelGroup(Alignment.BASELINE).
+		    		addComponent(CorrdinateTime) .addComponent(AgentNumber));
 		    leftToRight_G.addGroup(layout.createParallelGroup(Alignment.BASELINE).
 		    		addComponent(CreateAgents) .addComponent(StopButton));
 		    leftToRight_G.addGroup(layout.createParallelGroup(Alignment.BASELINE).
@@ -133,7 +179,7 @@ public class ArchitectAgent extends Agent {
 					if ( HostAddress.getText().equals(""))
 					{
 						try {
-							doc.insertString(doc.getLength(), "Error : No inpout for Host Address please try againg\n", aset);
+							doc.insertString(doc.getLength(), dateFormat.format(date)+":Error : No inpout for Host Address please try againg\n", aset);
 						} catch (BadLocationException e1) {
 							// TODO Auto-generated catch block
 							e1.printStackTrace();
@@ -146,7 +192,7 @@ public class ArchitectAgent extends Agent {
 					if ( PortAddress.getText().equals(""))
 					{
 						try {
-							doc.insertString(doc.getLength(), "Error : No inpout for Port Address please try againg\n", aset);
+							doc.insertString(doc.getLength(), dateFormat.format(date)+":Error : No inpout for Port Address please try againg\n", aset);
 						} catch (BadLocationException e1) {
 							// TODO Auto-generated catch block
 							e1.printStackTrace();
@@ -174,7 +220,7 @@ public class ArchitectAgent extends Agent {
 					SendMessage LU = new SendMessage("Die",RemoteHost);
 			        addBehaviour(LU);
 			        try {
-						doc.insertString(doc.getLength(), "Killing all agents...please wait...\n", aset);
+						doc.insertString(doc.getLength(), dateFormat.format(date)+":Killing all agents...please wait...\n", aset);
 					} catch (BadLocationException e1) {
 						// TODO Auto-generated catch block
 						e1.printStackTrace();
@@ -192,7 +238,7 @@ public class ArchitectAgent extends Agent {
 						public void run(){
 							//MessageMonitoring.append("Exiting from the system...\n");
 							try {
-								doc.insertString(doc.getLength(), "Exiting from the system...\n", aset);
+								doc.insertString(doc.getLength(), dateFormat.format(date)+":Exiting from the system...\n", aset);
 							} catch (BadLocationException e) {
 								// TODO Auto-generated catch block
 								e.printStackTrace();
@@ -213,7 +259,7 @@ public class ArchitectAgent extends Agent {
 					if ( HostAddress.getText().equals(""))
 					{
 						try {
-							doc.insertString(doc.getLength(), "Error : No inpout for Host Address please try againg\n", aset);
+							doc.insertString(doc.getLength(), dateFormat.format(date)+":Error : No inpout for Host Address please try againg\n", aset);
 						} catch (BadLocationException e1) {
 							// TODO Auto-generated catch block
 							e1.printStackTrace();
@@ -225,7 +271,7 @@ public class ArchitectAgent extends Agent {
 					if ( AgentNumber.getText().equals(""))
 					{
 						try {
-							doc.insertString(doc.getLength(), "Error : No inpout for Agents Number please try againg\n", aset);
+							doc.insertString(doc.getLength(), dateFormat.format(date)+":Error : No inpout for Agents Number please try againg\n", aset);
 						} catch (BadLocationException e2) {
 							// TODO Auto-generated catch block
 							e2.printStackTrace();
@@ -247,7 +293,7 @@ public class ArchitectAgent extends Agent {
 		        	};
 		        	Create.start();
 		        	try {
-						doc.insertString(doc.getLength(), AgentNumber.getText()+" Agents created\n", null);
+						doc.insertString(doc.getLength(),dateFormat.format(date)+":Creating "+ AgentNumber.getText()+" agents\n", null);
 					} catch (BadLocationException e2) {
 						// TODO Auto-generated catch block
 						e2.printStackTrace();
@@ -286,8 +332,17 @@ public class ArchitectAgent extends Agent {
 		    	  }
 		    	});
 		    
+		    ServerAddress.addMouseListener(new MouseAdapter() {
+		    	  @Override
+		    	  public void mouseClicked(MouseEvent e) {
+		    		  ServerAddress.setText("");
+		    	  }
+		    	});
+		    
 		    MessageMonitoring.setText("This is the message monitoring terminal, all messages will be displayed here\n");
+		    
 		    frame.add(panel);
+		  //  frame.getContentPane().add(panel_img);
 		    frame.pack();
 		    frame.setVisible(true);     
 		    monitoringFrame.pack();
@@ -323,7 +378,7 @@ public class ArchitectAgent extends Agent {
 	            //We create a "Create Message" when an AgentCreator recv the message it generates a number of agents
 	            if ( command.contains("Create") )
 	            {
-	            	msg.setContent("Create:"+AgentNumber.getText()); 
+	            	msg.setContent("Create:"+AgentNumber.getText()+":"+ServerAddress.getText()+":"+PortAddress.getText()+":"+CorrdinateTime.getText()); 
 	            	send(msg);
 	            	System.out.println("****I Sent Message to::> AC *****"+"\n"+
 	                         "The Content of My Message is::>"+ msg.getContent());
@@ -356,14 +411,16 @@ public class ArchitectAgent extends Agent {
 	            	//Send to each AgentCreator message to kill all the instances of Agents Smith
 	            	for ( int i=0; i<list.size(); ++i )
 	            	{
+	            		ACLMessage msgA = new ACLMessage(ACLMessage.REQUEST);
 	            		AID addressAttack = new AID();
 	    				addressAttack.setName("AC@AgentsCreator");
-	    	            addressAttack.addAddresses(list.get(i).toString());	  
-	    	            msg.addReceiver(addressAttack);
-	    	            msg.setContent("Die");
-	    	            send(msg);
+	    	            addressAttack.addAddresses(list.get(i).toString());	
+	    	            msgA.addReceiver(addressAttack);
+	    	            msgA.setLanguage("English");
+	    	            msgA.setContent("Die");
+	    	            send(msgA);
 	    	            System.out.println("****I Sent Message to::> AC *****"+"\n"+
-	                            "The Content of My Message is::>"+ msg.getContent());
+	                            "The Content of My Message is::>"+ msgA.getContent());
 	            	}
 	            }	   
 		}		
